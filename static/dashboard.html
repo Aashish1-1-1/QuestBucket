@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Questbucket Dashboard</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      body {
+        display: flex;
+        height: 100vh;
+        background: #f9fafb;
+        color: #333;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 240px;
+        background: #ffffff;
+        border-right: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 20px 0;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
+      .logo img {
+        width: 120px;
+      }
+
+      .menu {
+        flex: 1;
+      }
+
+      .menu ul {
+        list-style: none;
+      }
+
+      .menu li {
+        padding: 12px 24px;
+        cursor: pointer;
+        font-weight: 500;
+        color: #374151;
+        transition: background 0.2s;
+      }
+
+      .menu li:hover {
+        background: #f3f4f6;
+      }
+
+      .add-btn {
+        margin: 10px auto;
+        display: block;
+        width: 80%;
+        padding: 10px;
+        border: none;
+        border-radius: 6px;
+        background: #2563eb;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .add-btn:hover {
+        background: #1e40af;
+      }
+
+      /* Main content */
+      .main {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+      }
+
+      .header {
+        margin-bottom: 20px;
+      }
+
+      .header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+
+      .header p {
+        color: #6b7280;
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: transform 0.15s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-3px);
+      }
+
+      .card h3 {
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+
+      .card p {
+        font-size: 14px;
+        color: #6b7280;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div>
+        <div class="logo">
+          <img src="/assets/logo.svg" alt="Questbucket Logo" />
+        </div>
+        <div class="menu">
+          <ul>
+            <li>Notes</li>
+            <li>Topics</li>
+          </ul>
+        </div>
+      </div>
+      <button class="add-btn">+ Add</button>
+    </div>
+
+    <!-- Main content -->
+    <div class="main">
+      <div class="header">
+        <h1>Your Notes</h1>
+        <p>Satisfy your curiosity. Keep track of what excites you.</p>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <h3>Quantum Physics</h3>
+          <p>Why does time slow down near the speed of light?</p>
+        </div>
+        <div class="card">
+          <h3>History</h3>
+          <p>What triggered the fall of the Roman Empire?</p>
+        </div>
+        <div class="card">
+          <h3>Biology</h3>
+          <p>How do octopuses control each of their arms?</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

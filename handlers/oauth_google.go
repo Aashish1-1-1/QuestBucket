@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
@@ -14,6 +15,14 @@ import (
 	"os"
 	"time"
 )
+
+// Userinformation
+type Userinfo struct {
+	Id       string `json:"id"`
+	Email    string `json:"email"`
+	Verified bool   `json:"verified_email"`
+	Picture  string `json:"picture"`
+}
 
 var googleOauthConfig oauth2.Config
 
@@ -67,6 +76,12 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// GetOrCreate User in your db.
 	// Redirect or response with a token.
 	// More code .....
+	var userdata Userinfo
+	err = json.Unmarshal(data, &userdata)
+	if err != nil {
+		fmt.Println("Error occured", err)
+	}
+	fmt.Println(userdata)
 	fmt.Fprintf(w, "UserInfo: %s\n", data)
 }
 

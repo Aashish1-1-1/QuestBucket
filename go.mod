@@ -1,4 +1,4 @@
-module noteapp
+module questbucket
 
 go 1.24.6
 

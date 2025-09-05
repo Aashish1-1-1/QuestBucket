@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"noteapp/handlers"
-	// "github.com/joho/godotenv"
+	"questbucket/handlers"
 )
 
 func main() {
