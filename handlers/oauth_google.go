@@ -3,17 +3,20 @@ package handlers
 import (
 	"context"
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
+
+	"github.com/joho/godotenv"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 // Userinformation
@@ -81,8 +84,25 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("Error occured", err)
 	}
-	fmt.Println(userdata)
-	fmt.Fprintf(w, "UserInfo: %s\n", data)
+	i := strings.Index(userdata.Email, "@")
+	Db := OpenDB()
+	defer CloseDB(Db)
+	var email string
+	err = Db.QueryRow("SELECT email FROM users where id=$1", userdata.Id).Scan(&email)
+	if err == nil {
+		http.Redirect(w, r, "/dashboard", http.StatusPermanentRedirect)
+		return
+	}
+	if err != sql.ErrNoRows {
+		return
+	}
+	_, err = Db.Query(`insert into "users"("id","username", "email","pfp_url") values($1, $2, $3,$4)`, userdata.Id, userdata.Email[:i], userdata.Email, userdata.Picture)
+
+	if err != nil {
+		fmt.Println("Error occured", err)
+	}
+	fmt.Println("Inserted user data")
+	http.Redirect(w, r, "/dashboard", http.StatusPermanentRedirect)
 }
 
 func generateStateOauthCookie(w http.ResponseWriter) string {
