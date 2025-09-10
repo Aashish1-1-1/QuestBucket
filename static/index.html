@@ -1,91 +1,35 @@
-<html>
+<!doctype html>
+<html lang="en">
   <head>
-    <link
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css"
-    />
-    <style>
-      body {
-        display: flex;
-        min-height: 100vh;
-        margin: 0;
-        background: #fff;
-        justify-content: center; /* center horizontally */
-        align-items: center; /* center vertically */
-      }
-
-      .container-box {
-        max-width: 400px;
-        width: 100%;
-        padding: 32px;
-        border: 1px solid #eee;
-        border-radius: 8px;
-        text-align: center;
-      }
-
-      .google-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        text-transform: none;
-        font-weight: bold;
-        color: #444;
-        padding: 10px 20px;
-        border-radius: 4px;
-        border: 1px solid #ccc;
-        transition: background 0.2s ease;
-        margin: 0 auto;
-        max-width: 250px;
-      }
-
-      .google-btn:hover {
-        background: #f5f5f5;
-      }
-
-      .google-btn img {
-        width: 22px;
-        height: 22px;
-      }
-
-      h4 {
-        font-weight: 600;
-        margin-bottom: 10px;
-      }
-
-      p.subtitle {
-        color: #666;
-        margin-bottom: 30px;
-        font-size: 1.1rem;
-      }
-    </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quest-Bucket Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-
-  <body>
-    <div class="container-box z-depth-1 grey lighten-4">
-      <div style="text-align: center">
+  <body class="flex items-center justify-center min-h-screen bg-gray-50">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-sm text-center">
+      <div class="mb-4">
         <img
-          alt="Quest-Bucket logo"
           src="/assets/logo.svg"
-          style="width: 80px; height: auto; margin-bottom: 10px"
+          alt="Quest-Bucket Logo"
+          class="mx-auto w-20 h-auto mb-2"
         />
-        <h4>Quest-Bucket</h4>
+        <h4 class="text-2xl font-semibold">Quest-Bucket</h4>
       </div>
 
-      <p class="subtitle">
+      <p class="text-gray-600 mb-8 text-lg">
         Satisfy your curiosity.<br />
-        Keep track what excites you.
+        Keep track of what excites you.
       </p>
 
-      <a href="/auth/google/login" class="google-btn">
+      <a
+        href="/auth/google/login"
+        class="flex items-center justify-center gap-3 border border-gray-300 text-gray-700 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition mx-auto max-w-xs"
+      >
         <img
-          alt="Google Logo"
           src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Google_Favicon_2025.svg"
+          alt="Google Logo"
+          class="w-5 h-5"
         />
         Login with Google
       </a>

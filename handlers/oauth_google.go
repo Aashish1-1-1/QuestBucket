@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -28,6 +29,8 @@ type Userinfo struct {
 }
 
 var googleOauthConfig oauth2.Config
+var client redis.Client
+var ctx context.Context
 
 func init() {
 	if err := godotenv.Load(); err != nil {
@@ -40,6 +43,13 @@ func init() {
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email"},
 		Endpoint:     google.Endpoint,
 	}
+	client = *redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // No password set
+		DB:       0,  // Use default DB
+		Protocol: 2,  // Connection protocol
+	})
+	ctx = context.Background()
 }
 
 // Scopes: OAuth 2.0 scopes provide a way to limit the amount of access that is granted to an access token.
@@ -84,6 +94,13 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("Error occured", err)
 	}
+	//add session
+	err = client.Set(ctx, oauthState.Value, userdata.Id, 0).Err()
+	if err != nil {
+		panic(err)
+	}
+
+	// Add user to db
 	i := strings.Index(userdata.Email, "@")
 	Db := OpenDB()
 	defer CloseDB(Db)
@@ -111,7 +128,7 @@ func generateStateOauthCookie(w http.ResponseWriter) string {
 	b := make([]byte, 16)
 	rand.Read(b)
 	state := base64.URLEncoding.EncodeToString(b)
-	cookie := http.Cookie{Name: "oauthstate", Value: state, Expires: expiration}
+	cookie := http.Cookie{Name: "oauthstate", Value: state, Path: "/", Expires: expiration, HttpOnly: true, Secure: false}
 	http.SetCookie(w, &cookie)
 
 	return state
@@ -134,4 +151,12 @@ func getUserDataFromGoogle(code string) ([]byte, error) {
 		return nil, fmt.Errorf("failed read response: %s", err.Error())
 	}
 	return contents, nil
+}
+
+func IsValidSession(sessionID string) (string, bool) {
+	val, err := client.Get(ctx, sessionID).Result()
+	if err != nil {
+		return "", false
+	}
+	return val, true // dummy check
 }

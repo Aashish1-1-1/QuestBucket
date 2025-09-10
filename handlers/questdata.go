@@ -34,13 +34,11 @@ func CloseDB(Db *sql.DB) {
 		fmt.Println("Closed connection")
 	}
 }
-func IsValidSession(sessionID string) bool {
-	// TODO: check in your session store
-	return sessionID == "valid123" // dummy check
-}
 func UserDashboard(w http.ResponseWriter, r *http.Request) {
 	Db := OpenDB()
 	defer CloseDB(Db)
+	userId := r.Context().Value("userId").(string)
+	fmt.Println(userId)
 	tmpl, _ := template.ParseFiles("static/dashboard.html")
 	tmpl.Execute(w, "hellow")
 }

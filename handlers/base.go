@@ -1,17 +1,20 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 )
 
 func requireLogin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		cookie, err := r.Cookie("session_id")
-		if err != nil || !IsValidSession(cookie.Value) {
+		cookie, err := r.Cookie("oauthstate")
+		userid, valid := IsValidSession(cookie.Value)
+		if err != nil || !valid {
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}
-		next(w, r)
+		Ctx := context.WithValue(r.Context(), "userId", userid)
+		next(w, r.WithContext(Ctx))
 	}
 }
 func New() http.Handler {
@@ -25,7 +28,7 @@ func New() http.Handler {
 	mux.HandleFunc("/auth/google/callback", oauthGoogleCallback)
 
 	//User's data endpints
-	mux.HandleFunc("/dashboard", UserDashboard)
+	mux.HandleFunc("/dashboard", requireLogin(UserDashboard))
 
 	return mux
 }
