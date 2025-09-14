@@ -8,8 +8,12 @@ import (
 func requireLogin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("oauthstate")
+		if err != nil {
+			http.Redirect(w, r, "/", http.StatusFound)
+			return
+		}
 		userid, valid := IsValidSession(cookie.Value)
-		if err != nil || !valid {
+		if !valid {
 			http.Redirect(w, r, "/", http.StatusFound)
 			return
 		}

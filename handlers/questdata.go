@@ -34,15 +34,50 @@ func CloseDB(Db *sql.DB) {
 		fmt.Println("Closed connection")
 	}
 }
+
+type Quest struct {
+	Queststitle      sql.NullString
+	Questdescription sql.NullString
+	Questtag         sql.NullString
+}
+type Dashboard struct {
+	Username string
+	Pfp_url  string
+	Quests   []Quest
+}
+
 func UserDashboard(w http.ResponseWriter, r *http.Request) {
 	Db := OpenDB()
 	defer CloseDB(Db)
 	userId := r.Context().Value("userId").(string)
-	fmt.Println(userId)
+
+	var datas Dashboard
+	err := Db.QueryRow(`SELECT username, pfp_url FROM public.users WHERE id=$1`, userId).
+		Scan(&datas.Username, &datas.Pfp_url)
+	if err != nil {
+		fmt.Println("Error baby", err)
+	}
+
+	rows, err := Db.Query(`SELECT title, description, tags FROM public.quests WHERE user_id=$1`, userId)
+	defer rows.Close()
+	if err != nil {
+		fmt.Println("Error", err)
+	}
+	for rows.Next() {
+		var quest Quest
+		if err := rows.Scan(&quest.Queststitle, &quest.Questdescription, &quest.Questtag); err != nil {
+			fmt.Println("Error scanning row:", err)
+			return
+		}
+		datas.Quests = append(datas.Quests, quest)
+	}
 	tmpl, _ := template.ParseFiles("static/dashboard.html")
-	tmpl.Execute(w, "hellow")
+	err = tmpl.Execute(w, datas)
+	if err != nil {
+		fmt.Println("Error during tmpl exec", err)
+	}
 }
-func InsertQuest() {
+func AddQuest() {
 
 }
 func UpdateQuest() {

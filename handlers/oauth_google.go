@@ -95,7 +95,7 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error occured", err)
 	}
 	//add session
-	err = client.Set(ctx, oauthState.Value, userdata.Id, 0).Err()
+	err = client.Set(ctx, oauthState.Value, userdata.Id, 24*time.Hour).Err()
 	if err != nil {
 		panic(err)
 	}
