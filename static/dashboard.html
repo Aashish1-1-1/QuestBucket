@@ -27,7 +27,7 @@
               🔍 Search
             </li>
             <li class="px-6 py-3 cursor-pointer hover:bg-gray-100 rounded">
-              ⭐ Star
+              <a href="https://github.com/Aashish1-1-1/QuestBucket"> ⭐ Star</a>
             </li>
           </ul>
         </div>
@@ -55,50 +55,39 @@
             id="popup"
             class="hidden absolute top-12 right-0 bg-white border border-gray-200 rounded-lg shadow-lg flex flex-col w-32"
           >
+            <form action="/auth/logout" method="POST">
             <button class="px-4 py-3 text-left hover:bg-gray-100">
               Logout
             </button>
+              </form>
           </div>
         </div>
       </div>
-
-      <!-- Content -->
-      <div class="flex-1 p-8 overflow-y-auto">
-        <div class="mb-6">
-          <h1 class="text-2xl font-semibold mb-1">Your Notes</h1>
-          <p class="text-gray-500">
-            Satisfy your curiosity. Keep track of what excites you.
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          <div
-            class="bg-white p-5 rounded-xl shadow hover:-translate-y-1 transition cursor-pointer"
-          >
-            <h3 class="text-lg font-medium mb-2">Quantum Physics</h3>
-            <p class="text-gray-500 text-sm">
-              Why does time slow down near the speed of light?
-            </p>
+    <div class="flex-1 p-8 overflow-y-auto">
+      <div class="mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {{range .Quests}}
+          <div class="bg-white p-5 rounded-xl shadow hover:-translate-y-1 transition cursor-pointer">
+            <h3 class="text-lg font-medium mb-2">{{.Queststitle.String}}</h3>
+            <p class="text-gray-500 text-sm">{{.Questdescription.String}}</p>
+      
+            <!-- Tags like GitHub chips -->
+            <div class="flex flex-wrap gap-2 mt-2">
+              {{range .Questtag}}
+                <span class="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs font-medium">
+                  {{.}}
+                </span>
+              {{else}}
+                <span class="text-gray-400 text-xs">No tags</span>
+              {{end}}
+            </div>
           </div>
-          <div
-            class="bg-white p-5 rounded-xl shadow hover:-translate-y-1 transition cursor-pointer"
-          >
-            <h3 class="text-lg font-medium mb-2">History</h3>
-            <p class="text-gray-500 text-sm">
-              What triggered the fall of the Roman Empire?
-            </p>
-          </div>
-          <div
-            class="bg-white p-5 rounded-xl shadow hover:-translate-y-1 transition cursor-pointer"
-          >
-            <h3 class="text-lg font-medium mb-2">Biology</h3>
-            <p class="text-gray-500 text-sm">
-              How do octopuses control each of their arms?
-            </p>
-          </div>
-        </div>
+        {{else}}
+          <p class="text-gray-500">No quests found.</p>
+        {{end}}
       </div>
-    </div>
+      </div>
+      </div>
     <!-- Popup Form -->
     <div
       id="overlay"

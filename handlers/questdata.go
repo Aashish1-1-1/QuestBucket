@@ -2,13 +2,17 @@ package handlers
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
+	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
-
-	_ "github.com/lib/pq"
 )
 
 func OpenDB() *sql.DB {
@@ -36,9 +40,10 @@ func CloseDB(Db *sql.DB) {
 }
 
 type Quest struct {
-	Queststitle      sql.NullString
-	Questdescription sql.NullString
-	Questtag         sql.NullString
+	Queststitle      sql.NullString `json:"title"`
+	Questdescription sql.NullString `json:"description"`
+	Questtag         pq.StringArray `json:"tags"`
+	QuestNote        sql.NullString `json:"notes"`
 }
 type Dashboard struct {
 	Username string
@@ -77,8 +82,17 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error during tmpl exec", err)
 	}
 }
-func AddQuest() {
+func AddQuest(w http.ResponseWriter, r *http.Request) {
+	Db := OpenDB()
+	defer CloseDB(Db)
+	userId := r.Context().Value("userId").(string)
+	var data Quest
+	err := json.NewDecoder(r.Body).Decode(&data)
+	_, err = Db.Query(`insert into "quest"("user_id","title", "description","tags","notes",) values($1, $2, $3,$4,$5)`, userId, data.Queststitle, data.Questdescription, data.Questtag, data.QuestNote)
 
+	if err != nil {
+		fmt.Println("Error occured", err)
+	}
 }
 func UpdateQuest() {
 
@@ -86,4 +100,22 @@ func UpdateQuest() {
 
 func DeleteQuest() {
 
+}
+
+func GetNotes(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func mdToHTML(md []byte) []byte {
+	// create markdown parser with extensions
+	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock
+	p := parser.NewWithExtensions(extensions)
+	doc := p.Parse(md)
+
+	// create HTML renderer with extensions
+	htmlFlags := html.CommonFlags | html.HrefTargetBlank
+	opts := html.RendererOptions{Flags: htmlFlags}
+	renderer := html.NewRenderer(opts)
+
+	return markdown.Render(doc, renderer)
 }

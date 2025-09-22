@@ -99,7 +99,8 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		panic(err)
 	}
-
+	//modifying pfp_url cause that url is not downloading first the image
+	userdata.Picture = userdata.Picture[:len(userdata.Picture)-4] + "0"
 	// Add user to db
 	i := strings.Index(userdata.Email, "@")
 	Db := OpenDB()
@@ -159,4 +160,20 @@ func IsValidSession(sessionID string) (string, bool) {
 		return "", false
 	}
 	return val, true // dummy check
+}
+func Logout(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("oauthstate")
+	if err != nil {
+		fmt.Println("Error reading cookie")
+		return
+	}
+	cookieset := http.Cookie{Value: "", Path: "/", HttpOnly: true, Secure: false}
+	http.SetCookie(w, &cookieset)
+	_, err = client.Del(ctx, cookie.Value).Result()
+	if err != nil {
+		fmt.Println("Error deleting session", err)
+		return
+	}
+	fmt.Println("Logged out")
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
