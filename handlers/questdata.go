@@ -40,10 +40,17 @@ func CloseDB(Db *sql.DB) {
 }
 
 type Quest struct {
-	Queststitle      sql.NullString `json:"title"`
-	Questdescription sql.NullString `json:"description"`
-	Questtag         pq.StringArray `json:"tags"`
-	QuestNote        sql.NullString `json:"notes"`
+	Queststitle      sql.NullString
+	Questdescription sql.NullString
+	QuestNote        sql.NullString
+	Questtag         pq.StringArray
+}
+
+type Questjson struct {
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Tags        []string `json:"tags"`
+	Note        string   `json:"note"`
 }
 type Dashboard struct {
 	Username string
@@ -86,13 +93,21 @@ func AddQuest(w http.ResponseWriter, r *http.Request) {
 	Db := OpenDB()
 	defer CloseDB(Db)
 	userId := r.Context().Value("userId").(string)
-	var data Quest
+	var data Questjson
 	err := json.NewDecoder(r.Body).Decode(&data)
-	_, err = Db.Query(`insert into "quest"("user_id","title", "description","tags","notes",) values($1, $2, $3,$4,$5)`, userId, data.Queststitle, data.Questdescription, data.Questtag, data.QuestNote)
+	if err != nil {
+		fmt.Println(err)
+	}
+	_, err = Db.Query(`insert into "quest"("user_id","title", "description","tags","notes",) values($1, $2, $3,$4,$5)`, userId, data.Title, data.Description, data.Tags, data.Note)
 
 	if err != nil {
 		fmt.Println("Error occured", err)
 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"status": "ok",
+	})
 }
 func UpdateQuest() {
 

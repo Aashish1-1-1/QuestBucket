@@ -89,166 +89,69 @@
       </div>
       </div>
     <!-- Popup Form -->
-    <div
-      id="overlay"
-      class="hidden fixed inset-0 bg-black/40 flex justify-center items-center z-50"
-    >
+
+<div
+  id="overlay"
+  class="hidden fixed inset-0 bg-black/40 flex justify-center items-center z-50"
+>
+  <div
+    class="bg-white p-8 rounded-xl w-96 max-w-[90%] flex flex-col gap-4 shadow-lg"
+  >
+    <h2 class="text-xl font-semibold mb-2">Add a New Note</h2>
+
+    <!-- Title -->
+    <input
+      id="titleInput"
+      required
+      type="text"
+      placeholder="Title"
+      class="w-full p-2 border border-gray-300 rounded"
+    />
+
+    <!-- Short Description -->
+    <input
+      id="descriptionInput"
+      required
+      type="text"
+      placeholder="Short Description"
+      class="w-full p-2 border border-gray-300 rounded"
+    />
+
+    <!-- Note -->
+    <textarea
+      id="noteInput"
+      rows="5"
+      placeholder="Write your note here (you can leave it empty and update later)..."
+      class="w-full p-2 border border-gray-300 rounded"
+    ></textarea>
+
+    <!-- Tags -->
+    <div>
+      <label class="block text-sm font-medium mb-1">Tags</label>
       <div
-        class="bg-white p-8 rounded-xl w-96 max-w-[90%] flex flex-col gap-4 shadow-lg"
+        id="tagContainer"
+        class="flex flex-wrap items-center gap-2 p-2 border border-gray-300 rounded cursor-text"
+        onclick="document.getElementById('tagInput').focus()"
       >
-        <h2 class="text-xl font-semibold mb-2">Add a New Note</h2>
-
-        <!-- Title -->
         <input
+          id="tagInput"
           type="text"
-          placeholder="Title"
-          class="w-full p-2 border border-gray-300 rounded"
+          placeholder="Type and press Enter"
+          class="flex-1 outline-none border-none focus:ring-0"
         />
-
-        <!-- Short Description -->
-        <input
-          type="text"
-          placeholder="Short Description"
-          class="w-full p-2 border border-gray-300 rounded"
-        />
-
-        <!-- Note -->
-        <textarea
-          rows="5"
-          placeholder="Write your note here (you can leave it empty and update later)..."
-          class="w-full p-2 border border-gray-300 rounded"
-        ></textarea>
-
-        <!-- Tags -->
-        <div>
-          <label class="block text-sm font-medium mb-1">Tags</label>
-          <div
-            id="tagContainer"
-            class="flex flex-wrap items-center gap-2 p-2 border border-gray-300 rounded cursor-text"
-            onclick="document.getElementById('tagInput').focus()"
-          >
-            <input
-              id="tagInput"
-              type="text"
-              placeholder="Type and press Enter"
-              class="flex-1 outline-none border-none focus:ring-0"
-            />
-          </div>
-        </div>
-
-        <!-- Resources -->
-        <div>
-          <label class="block text-sm font-medium mb-1">Resources</label>
-          <div
-            id="resourceContainer"
-            class="flex flex-wrap items-center gap-2 p-2 border border-gray-300 rounded cursor-text"
-            onclick="document.getElementById('resourceInput').focus()"
-          >
-            <input
-              id="resourceInput"
-              type="text"
-              placeholder="Paste link & press Enter"
-              class="flex-1 outline-none border-none focus:ring-0"
-            />
-          </div>
-        </div>
-
-        <!-- Submit Button -->
-        <button
-          id="submitFormBtn"
-          class="py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-800 transition"
-        >
-          Add Note
-        </button>
       </div>
     </div>
 
-    <script>
-      function setupPillInput(containerId, inputId, itemsArray) {
-        const container = document.getElementById(containerId);
-        const input = document.getElementById(inputId);
-
-        function render() {
-          container.querySelectorAll(".pill").forEach((el) => el.remove());
-
-          itemsArray.forEach((item, index) => {
-            const pill = document.createElement("span");
-            pill.className =
-              "pill bg-gray-200 text-gray-700 px-3 py-1 rounded-full flex items-center gap-1 text-sm";
-            pill.innerHTML = `
-          ${item}
-          <button type="button" class="text-gray-500 hover:text-red-500" onclick="removeItem('${containerId}', ${index})">×</button>
-        `;
-            container.insertBefore(pill, input);
-          });
-        }
-
-        input.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === ",") {
-            e.preventDefault();
-            let value = input.value.trim().replace(/,$/, "");
-            if (value && !itemsArray.includes(value)) {
-              itemsArray.push(value);
-              render();
-            }
-            input.value = "";
-          }
-          if (
-            e.key === "Backspace" &&
-            input.value === "" &&
-            itemsArray.length > 0
-          ) {
-            itemsArray.pop();
-            render();
-          }
-        });
-
-        window.removeItem = function (cid, index) {
-          if (cid === containerId) {
-            itemsArray.splice(index, 1);
-            render();
-          }
-        };
-      }
-
-      let tags = [];
-      let resources = [];
-
-      setupPillInput("tagContainer", "tagInput", tags);
-      setupPillInput("resourceContainer", "resourceInput", resources);
-      // Profile popup
-      const profileBtn = document.getElementById("profile-btn");
-      const popup = document.getElementById("popup");
-
-      profileBtn.addEventListener("click", () => {
-        popup.classList.toggle("hidden");
-      });
-
-      document.addEventListener("click", (e) => {
-        if (!profileBtn.contains(e.target) && !popup.contains(e.target)) {
-          popup.classList.add("hidden");
-        }
-      });
-
-      // Form popup
-      const openFormBtn = document.getElementById("openFormBtn");
-      const overlay = document.getElementById("overlay");
-      const submitFormBtn = document.getElementById("submitFormBtn");
-
-      openFormBtn.addEventListener("click", () => {
-        overlay.classList.remove("hidden");
-      });
-
-      submitFormBtn.addEventListener("click", () => {
-        overlay.classList.add("hidden");
-        alert("Note added! (Integrate saving logic here)");
-      });
-
-      overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) {
-          overlay.classList.add("hidden");
-        }
-      });
+    <!-- Submit Button -->
+    <button
+      id="submitFormBtn"
+      class="py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-800 transition"
+    >
+      Add Note
+    </button>
+  </div>
+</div>
+    <script src="dashboard.js">
     </script>
   </body>
 </html>
