@@ -13,6 +13,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func OpenDB() *sql.DB {
@@ -40,6 +41,7 @@ func CloseDB(Db *sql.DB) {
 }
 
 type Quest struct {
+	Questsid         sql.NullString
 	Queststitle      sql.NullString
 	Questdescription sql.NullString
 	QuestNote        sql.NullString
@@ -70,14 +72,14 @@ func UserDashboard(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error baby", err)
 	}
 
-	rows, err := Db.Query(`SELECT title, description, tags FROM public.quests WHERE user_id=$1`, userId)
+	rows, err := Db.Query(`SELECT id,title, description, tags FROM public.quests WHERE user_id=$1`, userId)
 	defer rows.Close()
 	if err != nil {
 		fmt.Println("Error", err)
 	}
 	for rows.Next() {
 		var quest Quest
-		if err := rows.Scan(&quest.Queststitle, &quest.Questdescription, &quest.Questtag); err != nil {
+		if err := rows.Scan(&quest.Questsid, &quest.Queststitle, &quest.Questdescription, &quest.Questtag); err != nil {
 			fmt.Println("Error scanning row:", err)
 			return
 		}
@@ -98,7 +100,7 @@ func AddQuest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	_, err = Db.Query(`insert into "quest"("user_id","title", "description","tags","notes",) values($1, $2, $3,$4,$5)`, userId, data.Title, data.Description, data.Tags, data.Note)
+	_, err = Db.Query(`insert into "quests"("user_id","title", "description","tags","notes") values($1, $2, $3,$4,$5)`, userId, data.Title, data.Description, pq.Array(data.Tags), data.Note)
 
 	if err != nil {
 		fmt.Println("Error occured", err)
@@ -118,9 +120,25 @@ func DeleteQuest() {
 }
 
 func GetNotes(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) >= 3 {
+		id := parts[2]
+		Db := OpenDB()
+		defer CloseDB(Db)
+		var markdown string
+		err := Db.QueryRow(`Select notes from "quests" where id=$1`, id).Scan(&markdown)
+		if err != nil {
+			fmt.Println("Error occured", err)
+		}
+		html := mdToHTML([]byte(markdown))
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
 
+		w.Write(html)
+	} else {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
+	}
 }
-
 func mdToHTML(md []byte) []byte {
 	// create markdown parser with extensions
 	extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock

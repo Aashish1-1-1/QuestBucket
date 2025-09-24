@@ -48,15 +48,33 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const overlay = document.getElementById("overlay");
-const openFormBtn = document.getElementById("openFormBtn");
 const submitFormBtn = document.getElementById("submitFormBtn");
 
 const titleInput = document.getElementById("titleInput");
 const descriptionInput = document.getElementById("descriptionInput");
 const noteInput = document.getElementById("noteInput");
+const openFormBtn = document.getElementById("openFormBtn");
 
 openFormBtn.addEventListener("click", () => {
   overlay.classList.remove("hidden");
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const profileBtn = document.getElementById("profile-btn");
+  const popup = document.getElementById("popup");
+
+  // Toggle popup on profile click
+  profileBtn.addEventListener("click", (event) => {
+    event.stopPropagation(); // prevent click bubbling
+    popup.classList.toggle("hidden");
+  });
+
+  // Hide popup when clicking outside
+  document.addEventListener("click", (event) => {
+    if (!profileBtn.contains(event.target) && !popup.contains(event.target)) {
+      popup.classList.add("hidden");
+    }
+  });
 });
 
 submitFormBtn.addEventListener("click", () => {
