@@ -34,6 +34,8 @@ func New() http.Handler {
 	//User's data endpints
 	mux.HandleFunc("/dashboard", requireLogin(UserDashboard))
 	mux.HandleFunc("/addquest", requireLogin(AddQuest))
-	mux.HandleFunc("/posts/", GetNotes)
+	mux.HandleFunc("/post/", GetNotes)
+	mux.HandleFunc("/edit/post/", requireLogin(EditPost))
+	mux.HandleFunc("/delete/", requireLogin(DeleteQuest))
 	return mux
 }

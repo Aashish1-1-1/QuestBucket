@@ -133,9 +133,49 @@ async function postDataWithToken(url = "", data = {}) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
+    showToast();
+    location.reload();
     return await response.json();
   } catch (error) {
     console.error("Error:", error);
   }
+}
+
+function showToast(message = "Request successful!") {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+
+  // Show
+  toast.classList.remove("opacity-0", "pointer-events-none");
+  toast.classList.add("opacity-100");
+
+  // Hide after 5s
+  setTimeout(() => {
+    toast.classList.add("opacity-0", "pointer-events-none");
+    toast.classList.remove("opacity-100");
+  }, 5000);
+}
+function deleteItem(id) {
+  if (!confirm("Are you sure you want to delete this item?")) return;
+
+  fetch(`/delete/${id}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ id }),
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Network error");
+      return res.json();
+    })
+    .then((data) => {
+      console.log("Deleted:", data);
+      showToast();
+      location.reload();
+    })
+    .catch((err) => {
+      console.error(err);
+      alert("Delete failed: " + err.message);
+    });
 }

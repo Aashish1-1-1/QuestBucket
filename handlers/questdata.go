@@ -4,16 +4,17 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/gomarkdown/markdown"
-	"github.com/gomarkdown/markdown/html"
-	"github.com/gomarkdown/markdown/parser"
-	"github.com/lib/pq"
-	_ "github.com/lib/pq"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
+	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 func OpenDB() *sql.DB {
@@ -111,12 +112,46 @@ func AddQuest(w http.ResponseWriter, r *http.Request) {
 		"status": "ok",
 	})
 }
-func UpdateQuest() {
 
-}
+func DeleteQuest(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) >= 3 {
+		Db := OpenDB()
+		defer CloseDB(Db)
+		id := parts[2]
+		userId, ok := r.Context().Value("userId").(string)
+		if !ok {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		query := `DELETE FROM "quests" WHERE "id"=$1 AND "user_id"=$2`
+		res, err := Db.Exec(query, id, userId)
+		if err != nil {
+			http.Error(w, "Sql Error: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 
-func DeleteQuest() {
+		affected, err := res.RowsAffected()
+		if err != nil {
+			http.Error(w, "Sql Error2: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 
+		if affected == 0 {
+			fmt.Println("No rows deleted")
+		} else {
+			fmt.Printf("%d row(s) deleted\n", affected)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"status": "ok",
+		})
+		return
+	} else {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
+	}
 }
 
 func GetNotes(w http.ResponseWriter, r *http.Request) {
@@ -151,4 +186,179 @@ func mdToHTML(md []byte) []byte {
 	renderer := html.NewRenderer(opts)
 
 	return markdown.Render(doc, renderer)
+}
+func EditPost(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) >= 3 {
+		id := parts[3]
+		Db := OpenDB()
+		defer CloseDB(Db)
+		if r.Method == http.MethodPost {
+			userId, ok := r.Context().Value("userId").(string)
+			if !ok {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+				return
+			}
+			if err := r.ParseForm(); err != nil {
+				http.Error(w, "parse error: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			markdown := r.FormValue("content")
+			query := `UPDATE "quests" SET "notes"=$1 WHERE "id"=$2 AND "user_id"=$3`
+			res, err := Db.Exec(query, markdown, id, userId)
+			if err != nil {
+				http.Error(w, "Sql Error1: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			affected, err := res.RowsAffected()
+			if err != nil {
+				http.Error(w, "Sql Error2: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			if affected == 0 {
+				fmt.Println("No rows updated")
+			} else {
+				fmt.Printf("%d row(s) updated\n", affected)
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]string{
+				"status": "ok",
+			})
+			return
+		} else if r.Method == http.MethodGet {
+			var page = `
+					<!doctype html>
+					<html lang="en">
+					<head>
+					  <meta charset="utf-8" />
+					  <meta name="viewport" content="width=device-width, initial-scale=1" />
+					  <title>QuestBucket</title>
+					
+					  <!-- EasyMDE CSS -->
+					  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+					
+					  <!-- Tailwind CSS -->
+					  <script src="https://cdn.tailwindcss.com"></script>
+					
+					  <style>
+					    body {
+					      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+					      background: #f8fafc;
+					      padding: 24px;
+					    }
+					    .container {
+					      max-width: 900px;
+					      margin: 0 auto;
+					    }
+					  </style>
+					</head>
+					<body>
+					  <div class="container">
+					    <h1 class="text-3xl font-bold text-center mb-6">QuestBucket</h1>
+					
+					    <!-- Textarea that EasyMDE will enhance -->
+					    <textarea id="md" name="md" rows="10">{{ .Content }}</textarea>
+					
+					    <!-- Save Button -->
+					    <div class="mt-6 text-center">
+					      <button id="saveBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow-md transition">
+					        Save
+					      </button>
+					    </div>
+					  </div>
+					
+					  <!-- Toast -->
+					  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg opacity-0 pointer-events-none transition-opacity duration-500">
+					    Success
+					  </div>
+					
+					  <!-- EasyMDE JS -->
+					  <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+					
+					  <script>
+					    // Initialize EasyMDE
+					    const easyMDE = new EasyMDE({
+					      element: document.getElementById('md'),
+					      autosave: { enabled: false },
+					      spellChecker: false,
+					      toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
+					      autofocus: true,
+					    });
+					
+					    // Toast logic
+					    function showToast() {
+					      const toast = document.getElementById('toast');
+					      toast.classList.remove('opacity-0', 'pointer-events-none');
+					      toast.classList.add('opacity-100');
+					      setTimeout(() => {
+					        toast.classList.add('opacity-0', 'pointer-events-none');
+					        toast.classList.remove('opacity-100');
+					      }, 5000);
+					    }
+					
+					    // Save button click
+					    const saveBtn = document.getElementById('saveBtn');
+					    saveBtn.addEventListener('click', () => {
+					      const content = easyMDE.value();
+					
+					      fetch("/edit/post/{{.Id}}", {
+					        method: 'POST',
+					        headers: {
+					          'Content-Type': 'application/x-www-form-urlencoded',
+					        },
+					        body: new URLSearchParams({ content })
+					      })
+					      .then(res => {
+					        if (!res.ok) throw new Error('Network response was not ok');
+					        return res.json();
+					      })
+					      .then(data => {
+					        // Show toast on success
+					        showToast();
+					      })
+					      .catch(err => {
+					        console.error('Save failed', err);
+					        alert('Save failed: ' + err.message);
+					      });
+					    });
+					
+					    // Optional Ctrl+S shortcut
+					    window.addEventListener('keydown', function(e) {
+					      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+					        e.preventDefault();
+					        saveBtn.click();
+					      }
+					    });
+					  </script>
+					</body>
+					</html>
+				`
+			fmt.Println(id)
+			var markdown string
+			err := Db.QueryRow(`Select notes from "quests" where id=$1`, id).Scan(&markdown)
+			if err != nil {
+				fmt.Println("Error occured", err)
+			}
+			tmpl := template.Must(template.New("edior").Parse(page))
+			datas := struct {
+				Content string
+				Id      string
+			}{
+				Content: markdown,
+				Id:      id,
+			}
+			err = tmpl.Execute(w, datas)
+			if err != nil {
+				fmt.Println("Error during tmpl exec", err)
+			}
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	} else {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
+	}
 }
