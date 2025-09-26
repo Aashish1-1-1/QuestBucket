@@ -337,7 +337,6 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 					</body>
 					</html>
 				`
-			fmt.Println(id)
 			var markdown string
 			err := Db.QueryRow(`Select notes from "quests" where id=$1`, id).Scan(&markdown)
 			if err != nil {

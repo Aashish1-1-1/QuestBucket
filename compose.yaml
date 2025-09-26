@@ -3,34 +3,27 @@ services:
     build:
       context: .
     ports:
-      - "6996:6996"
+      - "8000:8000"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - cache
     networks:
       - questbucket-network
     env_file:
       - .env
-  postgres:
-    image: postgres:14-alpine
+  cache:
+    image: redis:6.2-alpine
     restart: always
-    environment:
-      - POSTGRES_DB=note
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=secret
-    ports:
-      - "5432:5432"
+    #ports:
+    #      - "6372:6379"
+    command: redis-server --save 20 1 --loglevel warning --requirepass ""
     networks:
       - questbucket-network
     volumes:
-      - db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U root -d aether"]
-      interval: 3s
-      timeout: 3s
-      retries: 5
+      - cache:/data
 networks:
   questbucket-network:
     driver: bridge
+
 volumes:
-  db:
+  cache:
+    driver: local
