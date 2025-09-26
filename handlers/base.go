@@ -37,5 +37,6 @@ func New() http.Handler {
 	mux.HandleFunc("/post/", GetNotes)
 	mux.HandleFunc("/edit/post/", requireLogin(EditPost))
 	mux.HandleFunc("/delete/", requireLogin(DeleteQuest))
+	mux.HandleFunc("/profile/", Profile)
 	return mux
 }

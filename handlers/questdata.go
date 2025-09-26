@@ -230,113 +230,6 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		} else if r.Method == http.MethodGet {
-			var page = `
-					<!doctype html>
-					<html lang="en">
-					<head>
-					  <meta charset="utf-8" />
-					  <meta name="viewport" content="width=device-width, initial-scale=1" />
-					  <title>QuestBucket</title>
-					
-					  <!-- EasyMDE CSS -->
-					  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
-					
-					  <!-- Tailwind CSS -->
-					  <script src="https://cdn.tailwindcss.com"></script>
-					
-					  <style>
-					    body {
-					      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-					      background: #f8fafc;
-					      padding: 24px;
-					    }
-					    .container {
-					      max-width: 900px;
-					      margin: 0 auto;
-					    }
-					  </style>
-					</head>
-					<body>
-					  <div class="container">
-					    <h1 class="text-3xl font-bold text-center mb-6">QuestBucket</h1>
-					
-					    <!-- Textarea that EasyMDE will enhance -->
-					    <textarea id="md" name="md" rows="10">{{ .Content }}</textarea>
-					
-					    <!-- Save Button -->
-					    <div class="mt-6 text-center">
-					      <button id="saveBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow-md transition">
-					        Save
-					      </button>
-					    </div>
-					  </div>
-					
-					  <!-- Toast -->
-					  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-green-600 text-white px-4 py-2 rounded shadow-lg opacity-0 pointer-events-none transition-opacity duration-500">
-					    Success
-					  </div>
-					
-					  <!-- EasyMDE JS -->
-					  <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
-					
-					  <script>
-					    // Initialize EasyMDE
-					    const easyMDE = new EasyMDE({
-					      element: document.getElementById('md'),
-					      autosave: { enabled: false },
-					      spellChecker: false,
-					      toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "preview", "side-by-side", "fullscreen"],
-					      autofocus: true,
-					    });
-					
-					    // Toast logic
-					    function showToast() {
-					      const toast = document.getElementById('toast');
-					      toast.classList.remove('opacity-0', 'pointer-events-none');
-					      toast.classList.add('opacity-100');
-					      setTimeout(() => {
-					        toast.classList.add('opacity-0', 'pointer-events-none');
-					        toast.classList.remove('opacity-100');
-					      }, 5000);
-					    }
-					
-					    // Save button click
-					    const saveBtn = document.getElementById('saveBtn');
-					    saveBtn.addEventListener('click', () => {
-					      const content = easyMDE.value();
-					
-					      fetch("/edit/post/{{.Id}}", {
-					        method: 'POST',
-					        headers: {
-					          'Content-Type': 'application/x-www-form-urlencoded',
-					        },
-					        body: new URLSearchParams({ content })
-					      })
-					      .then(res => {
-					        if (!res.ok) throw new Error('Network response was not ok');
-					        return res.json();
-					      })
-					      .then(data => {
-					        // Show toast on success
-					        showToast();
-					      })
-					      .catch(err => {
-					        console.error('Save failed', err);
-					        alert('Save failed: ' + err.message);
-					      });
-					    });
-					
-					    // Optional Ctrl+S shortcut
-					    window.addEventListener('keydown', function(e) {
-					      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-					        e.preventDefault();
-					        saveBtn.click();
-					      }
-					    });
-					  </script>
-					</body>
-					</html>
-				`
 			var markdown string
 			err := Db.QueryRow(`Select notes from "quests" where id=$1`, id).Scan(&markdown)
 			if err != nil {
@@ -356,6 +249,46 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	} else {
+		http.Error(w, "Invalid URL", http.StatusBadRequest)
+	}
+}
+
+func Profile(w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+	if len(parts) >= 3 {
+		username := parts[2]
+		Db := OpenDB()
+		defer CloseDB(Db)
+		var datas Dashboard
+		datas.Username = username
+		var userId string
+		err := Db.QueryRow(`SELECT id ,pfp_url FROM public.users WHERE username=$1`, username).
+			Scan(&userId, &datas.Pfp_url)
+		if err != nil {
+			fmt.Println("Error baby", err)
+		}
+
+		rows, err := Db.Query(`SELECT id,title, description, tags FROM public.quests WHERE user_id=$1`, userId)
+		defer rows.Close()
+		if err != nil {
+			fmt.Println("Error", err)
+		}
+		for rows.Next() {
+			var quest Quest
+			if err := rows.Scan(&quest.Questsid, &quest.Queststitle, &quest.Questdescription, &quest.Questtag); err != nil {
+				fmt.Println("Error scanning row:", err)
+				return
+			}
+			datas.Quests = append(datas.Quests, quest)
+		}
+		tmpl := template.Must(template.New("edior").Parse(profile))
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusOK)
+		err = tmpl.Execute(w, datas)
+		if err != nil {
+			fmt.Println("Error during tmpl exec", err)
 		}
 	} else {
 		http.Error(w, "Invalid URL", http.StatusBadRequest)
