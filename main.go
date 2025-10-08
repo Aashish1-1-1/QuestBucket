@@ -9,6 +9,7 @@ import (
 
 func main() {
 	// We create a simple server using http.Server and run.
+	handlers.InitializeDb()
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":8000"),
 		Handler: handlers.New(),

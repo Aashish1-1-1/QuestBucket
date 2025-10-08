@@ -105,7 +105,7 @@ func oauthGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	i := strings.Index(userdata.Email, "@")
 	Db := OpenDB()
 	defer CloseDB(Db)
-	var email string
+	var email any
 	err = Db.QueryRow("SELECT email FROM users where id=$1", userdata.Id).Scan(&email)
 	if err == nil {
 		http.Redirect(w, r, "/dashboard", http.StatusPermanentRedirect)

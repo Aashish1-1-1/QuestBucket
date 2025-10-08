@@ -1,4 +1,27 @@
 services:
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    #ports:
+    #      - "6372:6379"
+    command: redis-server --save 20 1 --loglevel warning --requirepass ""
+    networks:
+      - questbucket-network
+    volumes:
+      - cache:/data
+  database:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=questbucket
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+    # ports:
+    #   - "5432:5432"
+    networks:
+      - questbucket-network
+    volumes:
+      - db:/var/lib/postgresql/data
   web:
     build:
       context: .
@@ -10,16 +33,6 @@ services:
       - questbucket-network
     env_file:
       - .env
-  cache:
-    image: redis:6.2-alpine
-    restart: always
-    #ports:
-    #      - "6372:6379"
-    command: redis-server --save 20 1 --loglevel warning --requirepass ""
-    networks:
-      - questbucket-network
-    volumes:
-      - cache:/data
 networks:
   questbucket-network:
     driver: bridge
@@ -27,3 +40,4 @@ networks:
 volumes:
   cache:
     driver: local
+  db:

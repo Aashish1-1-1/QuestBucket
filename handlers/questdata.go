@@ -40,6 +40,36 @@ func CloseDB(Db *sql.DB) {
 		fmt.Println("Closed connection")
 	}
 }
+func InitializeDb() {
+	db := OpenDB()
+	defer CloseDB(db)
+	initializeschema := `
+			CREATE TABLE IF NOT EXISTS public.users (
+			  id VARCHAR(255) NOT NULL,
+			  username VARCHAR(100),
+			  email VARCHAR(255),
+			  pfp_url VARCHAR(255),
+			  CONSTRAINT users_pkey PRIMARY KEY (id)
+			);
+			
+			CREATE TABLE IF NOT EXISTS public.quests (
+			  id VARCHAR(255) NOT NULL DEFAULT gen_random_uuid()::text,
+			  user_id VARCHAR(255),
+			  title VARCHAR(255),
+			  description text,
+			  tags text[],
+			  notes text,
+			  CONSTRAINT quests_pkey PRIMARY KEY (id),
+			  CONSTRAINT quests_user_id_fkey FOREIGN KEY (user_id)
+			    REFERENCES public.users(id)
+			    ON DELETE CASCADE
+			);
+	`
+	if _, err := db.Exec(initializeschema); err != nil {
+		log.Fatalf("failed to init tables: %v", err)
+	}
+	fmt.Println("Initialized Successfully")
+}
 
 type Quest struct {
 	Questsid         sql.NullString
@@ -263,6 +293,7 @@ func Profile(w http.ResponseWriter, r *http.Request) {
 		defer CloseDB(Db)
 		var datas Dashboard
 		datas.Username = username
+
 		var userId string
 		err := Db.QueryRow(`SELECT id ,pfp_url FROM public.users WHERE username=$1`, username).
 			Scan(&userId, &datas.Pfp_url)
